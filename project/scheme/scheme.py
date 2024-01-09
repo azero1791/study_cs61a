@@ -76,7 +76,7 @@ def eval_all(expressions, env):
     if expressions.rest == nil and isinstance(expressions.first, int):
         return expressions.first
     elif expressions.rest == nil:
-        return scheme_eval(expressions.first, env)
+        return scheme_eval(expressions.first, env, True)
     else:
         scheme_eval(expressions.first, env)
         return eval_all(expressions.rest, env)
@@ -345,9 +345,9 @@ def do_if_form(expressions, env):
     """
     validate_form(expressions, 2, 3)
     if is_true_primitive(scheme_eval(expressions.first, env)):
-        return scheme_eval(expressions.rest.first, env)
+        return scheme_eval(expressions.rest.first, env, True)
     elif len(expressions) == 3:
-        return scheme_eval(expressions.rest.rest.first, env)
+        return scheme_eval(expressions.rest.rest.first, env, True)
 
 def do_and_form(expressions, env):
     """Evaluate a (short-circuited) and form.
@@ -367,7 +367,7 @@ def do_and_form(expressions, env):
     if expressions ==  nil:
         return True
     if expressions.rest is nil:
-        value = scheme_eval(expressions.first, env)
+        value =scheme_eval(expressions.first, env)
         return False if is_false_primitive(value) else value
     else:
         if is_false_primitive(scheme_eval(expressions.first, env)):
@@ -474,6 +474,7 @@ def do_define_macro(expressions, env):
     """
     # BEGIN Problem 20
     "*** YOUR CODE HERE ***"
+    return MacroProcedure(expressions.first.rest, expressions.rest, env)
     # END Problem 20
 
 
@@ -660,7 +661,7 @@ def complete_apply(procedure, args, env):
     validate_procedure(procedure)
     val = scheme_apply(procedure, args, env)
     if isinstance(val, Thunk):
-        return scheme_eval(val.expr, val.env)
+        return scheme_eval(val.expr, val.env, True)
     else:
         return val
 
@@ -676,6 +677,9 @@ def optimize_tail_calls(prior_eval_function):
         result = Thunk(expr, env)
         # BEGIN
         "*** YOUR CODE HERE ***"
+        while isinstance(result, Thunk):
+            result = prior_eval_function(result.expr, result.env)
+        return result
         # END
     return optimized_eval
 
@@ -687,7 +691,7 @@ def optimize_tail_calls(prior_eval_function):
 ################################################################
 # Uncomment the following line to apply tail call optimization #
 ################################################################
-# scheme_eval = optimize_tail_calls(scheme_eval)
+scheme_eval = optimize_tail_calls(scheme_eval)
 
 
 
